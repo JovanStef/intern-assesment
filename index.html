@@ -112,7 +112,7 @@ getData().then(async([a,c,u])=>{
         _user.company = _company
         return _user
     })
-    data.push(item)
+    data.push(...item)
     console.log('data', data);
 })
 
