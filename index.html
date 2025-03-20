@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Chat</title>
+</head>
+<body>
+  <h1>Real-Time Chat</h1>
+  <div id="messages"></div>
+  <input type="text" id="messageInput" />
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:8080');
+
+    // Event listener for WebSocket connection open
+    socket.addEventListener('open', () => {
+      console.log('Connected to WebSocket server.');
+    });
+
+    // Event listener for incoming messages
+    socket.addEventListener('message', (event) => {
+        
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = `<p>${event.data.toString()}</p>`;
+    });
+
+    // Function to send messages
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value;
+      socket.send(message);
+      messageInput.value = '';
+    }
+
+    const users = {}
+    const addresses = {}
+    const companies = {}
+
+    async function getUsersData() {
+  const url = "http://localhost:3000/users";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    json.forEach(element => {
+        users[element.id] = element
+    });
+    console.log('users', json);
+    return json
+
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function getCompaniesData() {
+  const url = " http://localhost:3000/companies";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    json.forEach(element => {
+        companies[element.userId] = element
+    });
+    console.log('companies', json);
+    return json
+
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function getAddressesData() {
+  const url = " http://localhost:3000/addresses";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    json.forEach(element => {
+        addresses[element.companyId] = element
+    });
+    console.log('addresses', json);
+    return json
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+
+
+async function getData(){
+    return Promise.all([
+        getAddressesData(),
+getCompaniesData(),
+getUsersData()]
+    )
+}
+const data = []
+getData().then(async([a,c,u])=>{
+    const item = u.map(_user =>{
+        const _company = companies[_user.id]
+        _company.address = addresses[_company.id]
+        _user.company = _company
+        return _user
+    })
+    data.push(item)
+    console.log('data', data);
+})
+
+
+  </script>
+</body>
+</html>
